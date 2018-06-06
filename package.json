@@ -1,0 +1,16 @@
+{
+  "name": "fund-clearing-app",
+  "version": "1.0.0",
+  "description": "Drives fund-clearing-network",
+  "main": "app.js",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "winston": "^3.0.0-rc6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT"
+}
