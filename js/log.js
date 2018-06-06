@@ -1,3 +1,4 @@
+const inspect = require('util').inspect;
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, prettyPrint, printf } = format;
 
@@ -7,7 +8,7 @@ const logger = createLogger({
         label({ label: 'fund-clearing-app' }),
         timestamp(),
         prettyPrint(),
-        printf(i => `${i.timestamp} [${i.label}] ${JSON.stringify(i.message, null, 4)}`)
+        printf(i => `${i.timestamp} [${i.label}] ${inspect(i.message)}`)
     ),
     transports: [ new transports.Console() ]
 });

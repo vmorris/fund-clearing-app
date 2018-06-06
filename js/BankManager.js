@@ -1,4 +1,4 @@
-const inspect = require('util').inspect;
+const WebSocket = require('ws');
 
 const logger = require('./log.js'); 
 const sleep = require('./util.js').sleep;
@@ -16,13 +16,18 @@ module.exports.BankManager = class {
         this.restURL = restURL;
         this.bankTxRequestQueue = {};
         this.BankAccounts = {};
+        var self = this;
         this.watchQueue();
         this.createBatch();
-        logger.info('BankManager: Created ' + this.bankID);
+        const ws = new WebSocket('ws://' + this.restURL);
+        ws.addEventListener('message', (message) => {
+            self.handleBatchCreatedEvent(message);
+        });
+        logger.info(this.bankID + ': Created');
     }
     async createBatch() {
         for (;;) {
-            const waitTime = getRandomInt(3000, 10000);
+            const waitTime = getRandomInt(10000, 20000); // request create batch every 10-20 seconds
             this.sendCreateBatch();
             await sleep(waitTime);
         }
@@ -38,7 +43,7 @@ module.exports.BankManager = class {
                     logger.debug(this.bankID + 'watchqueue 2 ' + i);
                     logger.debug(this.bankTxRequestQueue[i]);
                     if (this.bankTxRequestQueue[i].state != TX_STATES.SUBMITTED) {
-                        logger.info('BankManager: ' + this.bankID + ': Processing ' + i);
+                        logger.info(this.bankID + ': Processing ' + i);
                         this.bankTxRequestQueue[i].markSubmitted();
                         this.sendFundTransferRequests(i);
                     }
@@ -72,13 +77,13 @@ module.exports.BankManager = class {
         }
         try {
             const response = await rest.createTransferRequest(this.restURL, data);
-            logger.debug('BankManager: sendTransferRequest ' + id + 'response.status = ' + response.status);
+            logger.debug(this.bankID + ': sendTransferRequest ' + id + 'response.status = ' + response.status);
             if (response.status == 200) {
                 delete this.bankTxRequestQueue[id];
             }
         }
         catch (error) {
-            logger.error(error);
+            logger.error('ERROR: ' + error);
         }
     }
     async sendCreateBatch() {
@@ -96,11 +101,40 @@ module.exports.BankManager = class {
             }
             const response = await rest.createBatch(this.restURL, data);
             if (response.status == 200) {
-                logger.info('Batch Created!');
+                logger.info(this.bankID + ': batch create request sent');
             }
         }
         catch (error) {
-            logger.error(error);
+            logger.error('ERROR: ' + error);
+        }
+    }
+    async handleBatchCreatedEvent(message) {
+        logger.info(this.bankID + ': processing BatchCreatedEvent');
+        logger.debug(this.bankID + ': BTR Event data: ' + message.data);
+        const eventData = JSON.parse(message.data);
+        const btrID = eventData.batchId;
+        //TODO: we should keep a handle on btrID and watch it... need to know when it's ready to settle!
+        if (btrID.includes(this.bankID)) {
+            try {
+                logger.info(this.bankID + ': requesting BTR');
+                let status = 0;
+                let btr;
+                while (status != 200) {
+                    btr = await rest.getBatchTransferRequest(this.restURL, btrID);
+                    status = btr.status;
+                }
+                logger.debug(btr.data.transferRequests);
+                for (let tr in btr.data.transferRequests) {
+                    let _tr = btr.data.transferRequests[tr].split('#')[1];
+                    logger.info(this.bankID + ': requesting info on txreq ' + _tr);
+                    let txreq = await rest.getTransferRequest(this.restURL, _tr);
+                    logger.info(txreq.data);
+                    //TODO: handle txreqest data -- update internal account and mark preprocessing true
+                }
+            }
+            catch (error) {
+                logger.error('ERROR: ' + error);
+            }
         }
     }
     // detected incoming credit fund transfer from fund-clearing network

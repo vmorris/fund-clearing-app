@@ -24,22 +24,22 @@ module.exports.FundTransfer = class {
         this.paidInPrincipleTimestamp;
         this.paidTimestamp;
         this.transferType;
-        logger.info('FundTransfer: Created new transfer ' + this.id);
+        logger.info('transfer created: ' + this.id);
         logger.debug(this);
     }
     markSubmitted() {
         this.state = TRANSFER_STATES.SUBMITTED;
         this.submittedTimestamp = Date.now();
-        logger.info('FundTransfer: Set ' + this.id + ' state to SUBMITTED');
+        logger.info('SUBMITTED: ' + this.id);
     }
     markPaidInPriciple() {
         this.state = TRANSFER_STATES.PAID_IN_PRINCIPAL;
         this.paidInPrincipleTimestamp = Date.now();
-        logger.info('FundTransfer: Set ' + this.id + ' state to PAID_IN_PRINCIPAL');
+        logger.info('PAID_IN_PRINCIPAL' + this.id);
     }
     markPaid() {
         this.state = TRANSFER_STATES.PAID;
         this.paidTimestamp = Date.now();
-        logger.info('FundTransfer: Set ' + this.id + ' state to PAID');
+        logger.info('PAID' + this.id);
     }
 }

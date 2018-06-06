@@ -6,8 +6,8 @@ const BankManager = require('./BankManager.js').BankManager;
 
 async function makeTransfers(fromAccount, toBank, toAccount) {
     for (;;) {
-        // wait some amount of time between 3 and 10 seconds
-        let waitTime = getRandomInt(3000, 10000);
+        // delay fund transfer create requests for 5 to 10 seconds
+        let waitTime = getRandomInt(5000, 10000);
         let amount = getRandomInt(1, 100);
         fromAccount.createFundTransfer(guid(), amount, toBank, toAccount);
         await sleep(waitTime);
@@ -15,12 +15,13 @@ async function makeTransfers(fromAccount, toBank, toAccount) {
 }
 
 function main() {
-    const bank1 = new BankManager('bank1', 'USD', 'http://127.0.0.1:3001/api/');
-    const bank1account1 = bank1.createBankAccount(11, 10000);
-    const bank1account2 = bank1.createBankAccount(12, 20000);
-    const bank2 = new BankManager('bank2', 'EURO', 'http://127.0.0.1:3002/api/');
-    const bank2account1 = bank2.createBankAccount(21, 30000);
+    const bank1 = new BankManager('bank1', 'USD', '127.0.0.1:3001');
+    const bank1account1 = bank1.createBankAccount(11, 10000); // bank1 has an account numbered 11
+    const bank1account2 = bank1.createBankAccount(12, 10000); // bank1 has an account numbered 12
+    const bank2 = new BankManager('bank2', 'EURO', '127.0.0.1:3002');
+    const bank2account1 = bank2.createBankAccount(21, 10000); // bank2 has an account numbered 21
     
+    // these loop forever ...
     makeTransfers(bank1account1, 'bank2', 21);
     makeTransfers(bank1account2, 'bank2', 21);
     makeTransfers(bank2account1, 'bank1', 11);

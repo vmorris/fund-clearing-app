@@ -5,7 +5,8 @@
   "main": "app.js",
   "dependencies": {
     "axios": "^0.18.0",
-    "winston": "^3.0.0-rc6"
+    "winston": "^3.0.0-rc6",
+    "ws": "^5.2.0"
   },
   "devDependencies": {},
   "scripts": {
